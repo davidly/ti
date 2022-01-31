@@ -7,12 +7,16 @@ Usage: ti app [arg1] [arg2] [...]
 
 Sample output for a 32-core machine:
 
-process stats for C:\ntbin\ff.exe
-peak working set:       20,631,552
-final working set:          28,672
-kernel CPU:                 36,468
-user CPU:                   13,203
-total CPU:                  49,671
-core efficiency:            23.89%
-average cores used:           7.65
-elapsed time:                6,497
+    process stats for C:\ntbin\ff.exe
+    peak working set:       20,631,552
+    final working set:          28,672
+    kernel CPU:                 36,468
+    user CPU:                   13,203
+    total CPU:                  49,671
+    core efficiency:            23.89%
+    average cores used:           7.65
+    elapsed time:                6,497
+
+Build using a standard Visual Studio VC 64 bit command prompt:
+
+    cl /nologo ti.cxx /EHac /Zi /D_AMD64_ /link /OPT:REF
