@@ -4,8 +4,9 @@ Timing Info is a Windows command-line app that shows resource information about 
 TI spawns a process then awaits its completion. 
 It's like a million other similar tools yet slightly different.
 
-Usage: ti app [arg1] [arg2] [...]
-  Timing Info starts a process then displays information about that process after it exits
+    Usage: ti app [arg1] [arg2] [...]
+    
+      Timing Info starts a process then displays information about that process after it exits
 
 Sample output for a 32-core machine:
 
