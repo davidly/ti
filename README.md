@@ -1,6 +1,8 @@
 # ti
 
-Time It is a Windows command-line app that shows resource information about a process it spawns and then awaits its completion.
+Timing Info is a Windows command-line app that shows resource information about a process. 
+TI spawns a process then awaits its completion. 
+It's like a million other similar tools yet slightly different.
 
 Usage: ti app [arg1] [arg2] [...]
   Timing Info starts a process then displays information about that process after it exits
@@ -17,6 +19,10 @@ Sample output for a 32-core machine:
     average cores used:           7.65
     elapsed time:                6,497
 
-Build using a standard Visual Studio VC 64 bit command prompt:
+Build using a standard Visual Studio VC 64 or 32 bit command prompt:
 
     cl /nologo ti.cxx /EHac /Zi /D_AMD64_ /link /OPT:REF
+    
+or
+
+    cl /nologo ti.cxx /EHac /Zi /Fe: /link /OPT:REF
