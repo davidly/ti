@@ -26,4 +26,4 @@ Build using a standard Visual Studio VC 64 or 32 bit command prompt:
     
 or
 
-    cl /nologo ti.cxx /EHac /Zi /Fe: /link /OPT:REF
+    cl /nologo ti.cxx /EHac /Zi /link /OPT:REF
