@@ -117,7 +117,8 @@ void ShowProcessDetails( HANDLE hProc, LONGLONG elapsed, CPerfTime & perfTime )
         ullU.HighPart = userFT.dwHighDateTime;
         ullU.LowPart = userFT.dwLowDateTime;
 
-        double efficiency = (double) perfTime.DurationToMS( ullU.QuadPart + ullK.QuadPart ) / ( (double) perfTime.DurationToMS( elapsed ) * (double) cpuCount );
+        double efficiency = (double) perfTime.DurationToMS( ullU.QuadPart + ullK.QuadPart ) /
+                            ( (double) perfTime.DurationToMS( elapsed ) * (double) cpuCount );
         double coresUsed = efficiency * (double) cpuCount / 100.0;
 
         wprintf( L"kernel CPU:        %15ws\n", perfTime.RenderDurationInMS( ullK.QuadPart ) );
