@@ -79,7 +79,7 @@ class CPerfTime
         } //RenderDurationIsMS
 }; //CPerfTime
 
-void ShowProcessDetails( HANDLE hProc, LONGLONG elapsed, CPerfTime & perfTime )
+void ShowProcessDetails( HANDLE hProc, LONGLONG elapsed, CPerfTime & perfTime, bool fOneLine )
 {
     WCHAR awcRender[ MAX_PATH * 2 ];
     const int cwcRender = _countof( awcRender );
@@ -89,18 +89,21 @@ void ShowProcessDetails( HANDLE hProc, LONGLONG elapsed, CPerfTime & perfTime )
     // QueryFullProcessImageNameW and GetModeuleFileNameEx fail with error 31 general failure if the process has already exited
     // If so, fall back to GetProcessImageFileNameW, which shows disk device names, not drive letters
 
-    if ( 0 != g_awcApp[0] )
-        wprintf( L"process stats for %ws\n", g_awcApp );
-    else if ( 0 != GetProcessImageFileNameW( hProc, awcRender, cwcRender ) )
-        wprintf( L"process stats for: %ws\n", awcRender );
-
-    PROCESS_MEMORY_COUNTERS_EX pmc;
-    pmc.cb = sizeof pmc;
-    
-    if ( GetProcessMemoryInfo( hProc, (PPROCESS_MEMORY_COUNTERS) &pmc, sizeof PROCESS_MEMORY_COUNTERS_EX ) )
+    if ( !fOneLine )
     {
-        wprintf( L"peak working set:  %15ws\n", perfTime.RenderLL( pmc.PeakWorkingSetSize ) );
-        wprintf( L"final working set: %15ws\n", perfTime.RenderLL( pmc.WorkingSetSize ) );
+        if ( 0 != g_awcApp[0] )
+            wprintf( L"process stats for %ws\n", g_awcApp );
+        else if ( 0 != GetProcessImageFileNameW( hProc, awcRender, cwcRender ) )
+            wprintf( L"process stats for: %ws\n", awcRender );
+
+        PROCESS_MEMORY_COUNTERS_EX pmc;
+        pmc.cb = sizeof pmc;
+        
+        if ( GetProcessMemoryInfo( hProc, (PPROCESS_MEMORY_COUNTERS) &pmc, sizeof PROCESS_MEMORY_COUNTERS_EX ) )
+        {
+            wprintf( L"peak working set:  %15ws\n", perfTime.RenderLL( pmc.PeakWorkingSetSize ) );
+            wprintf( L"final working set: %15ws\n", perfTime.RenderLL( pmc.WorkingSetSize ) );
+        }
     }
 
     SYSTEM_INFO si;
@@ -121,19 +124,31 @@ void ShowProcessDetails( HANDLE hProc, LONGLONG elapsed, CPerfTime & perfTime )
                             ( (double) perfTime.DurationToMS( elapsed ) * (double) cpuCount );
         double coresUsed = efficiency * (double) cpuCount / 100.0;
 
-        wprintf( L"kernel CPU:        %15ws\n", perfTime.RenderDurationInMS( ullK.QuadPart ) );
-        wprintf( L"user CPU:          %15ws\n", perfTime.RenderDurationInMS( ullU.QuadPart ) );
-        wprintf( L"total CPU:         %15ws\n", perfTime.RenderDurationInMS( ullU.QuadPart + ullK.QuadPart ) );
-        wprintf( L"core efficiency:   %14.2lf%%\n", 100 * efficiency );
-        wprintf( L"average cores used:%15.2lf\n", 100 * coresUsed );
-        wprintf( L"elapsed time:      %15ws\n", perfTime.RenderDurationInMS( elapsed ) );
+        if ( fOneLine )
+        {
+            wprintf( L"elapsed ms %ws  /", perfTime.RenderDurationInMS( elapsed ) );
+            wprintf( L"  cpu ms %ws  /", perfTime.RenderDurationInMS( ullU.QuadPart + ullK.QuadPart ) );
+            wprintf( L"  core efficiency %.2lf%%  /", 100 * efficiency );
+            wprintf( L"  cores used %.2lf", 100 * coresUsed );
+            wprintf( L"\n" );
+        }
+        else
+        {
+            wprintf( L"kernel CPU:        %15ws\n", perfTime.RenderDurationInMS( ullK.QuadPart ) );
+            wprintf( L"user CPU:          %15ws\n", perfTime.RenderDurationInMS( ullU.QuadPart ) );
+            wprintf( L"total CPU:         %15ws\n", perfTime.RenderDurationInMS( ullU.QuadPart + ullK.QuadPart ) );
+            wprintf( L"core efficiency:   %14.2lf%%\n", 100 * efficiency );
+            wprintf( L"average cores used:%15.2lf\n", 100 * coresUsed );
+            wprintf( L"elapsed time:      %15ws\n", perfTime.RenderDurationInMS( elapsed ) );
+        }
     }
 } //ShowProcessDetails
 
 void Usage()
 {
-    wprintf( L"Usage: ti app [arg1] [arg2] [...]\n" );
+    wprintf( L"Usage: ti [-o] app [arg1] [arg2] [...]\n" );
     wprintf( L"  Timing Info starts a process then displays information about that process after it exits\n" );
+    wprintf( L"      -o        Show timing info on one line instead of multiple\n" );
 
     exit( 1 );
 } //Usage
@@ -142,17 +157,35 @@ extern "C" int __cdecl wmain( int argc, WCHAR * argv[] )
 {
     try
     {
+        bool fOneLine = false;
+
         if ( 1 == argc )
             Usage();
 
         WCHAR c = argv[1][0];
 
-        if ( L'-' == c || L'/' == c || L'?' == c )
+        if ( L'?' == c )
             Usage();
+
+        int firstArg = 1;
+
+        if ( L'-' == c || L'/' == c )
+        {
+            if ( 'O' == toupper( argv[1][1] ) )
+            {
+                fOneLine = true;
+                firstArg = 2;
+
+                if ( 2 == argc )
+                    Usage();
+            }
+            else
+                Usage();
+        }
 
         WCHAR * pproc = g_awcProcess;
 
-        for ( int arg = 1; arg < argc; arg++ )
+        for ( int arg = firstArg; arg < argc; arg++ )
         {
             // +4 to save space for NULL, two quotes, and a space.
 
@@ -164,7 +197,7 @@ extern "C" int __cdecl wmain( int argc, WCHAR * argv[] )
 
             // Add a space between arguments
 
-            if ( 1 != arg )
+            if ( firstArg != arg )
                 *pproc++ = L' ';
 
             // wrap arguments with spaces in double quotes
@@ -205,7 +238,7 @@ extern "C" int __cdecl wmain( int argc, WCHAR * argv[] )
             LONGLONG elapsed = 0;
             perfTime.CumulateSince( elapsed );
 
-            ShowProcessDetails( pi.hProcess, elapsed, perfTime );
+            ShowProcessDetails( pi.hProcess, elapsed, perfTime, fOneLine );
 
             CloseHandle( pi.hThread );
             CloseHandle( pi.hProcess );
