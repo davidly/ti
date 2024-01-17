@@ -36,7 +36,7 @@ class CPerfTime
         int RenderLL( LONGLONG ll, WCHAR * pwcBuf, ULONG cwcBuf )
         {
             WCHAR awc[100];
-            swprintf( awc, L"%I64u", ll );
+            swprintf_s( awc, _countof( awc ), L"%I64u", ll );
 
             if ( 0 != cwcBuf )
                 *pwcBuf = 0;
@@ -47,7 +47,7 @@ class CPerfTime
         WCHAR * RenderLL( LONGLONG ll )
         {
             WCHAR awc[100];
-            swprintf( awc, L"%I64u", ll );
+            swprintf_s( awc, _countof( awc ), L"%I64u", ll );
 
             awcRender[0] = 0;
 
